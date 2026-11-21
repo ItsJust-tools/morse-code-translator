@@ -34,7 +34,7 @@ export function ToolCanvas({
       ref={canvasRef}
       className="converter-canvas"
       role="application"
-      aria-label="Base converter canvas"
+      aria-label="Morse translator canvas"
       style={{ fontSize: `${fontSize}px` }}
     >
       {onClear ? <Toolbar state={state} onChange={handleChange} onClear={onClear} /> : null}

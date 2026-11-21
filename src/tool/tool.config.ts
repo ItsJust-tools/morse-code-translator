@@ -1,15 +1,11 @@
-import type { ToolConfig, ToolTheme } from '@itsjust/core';
+import type { ToolConfig } from '@itsjust/core';
 
-const toolTheme: ToolTheme = {
-  brand: 'Base Converter',
-  accent: '#10b981',
-};
-
-export const toolConfig: ToolConfig = {
-  id: '1795194271',
-  name: 'Base Converter',
+export const toolConfig: ToolConfig & { category: string } = {
+  id: 'tool-1795255487',
+  name: 'Morse Code Translator',
+  category: 'Utility' as const,
   description:
-    'Convert numbers between binary, octal, decimal, hexadecimal and arbitrary bases 2-36 with live input and bit grouping.',
+    'Translate text to Morse code and Morse code back to text with audio playback, flashing signal light, encoding charts, and copy/share support.',
   version: '1.0.0',
   exportFormats: ['png', 'jpeg', 'webp', 'pdf'],
   features: {
@@ -20,7 +16,6 @@ export const toolConfig: ToolConfig = {
     statusBar: true,
     darkMode: true,
   },
-  theme: toolTheme,
 };
 
 export default toolConfig;

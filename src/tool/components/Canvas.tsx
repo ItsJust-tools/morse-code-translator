@@ -1,145 +1,171 @@
 'use client';
 
 import React from 'react';
-import {
-  convertToAllBases,
-  parseIntegerInBase,
-  twosComplementInfo,
-  requiredBitLength,
-} from '../tool-definition';
-import type { ToolState } from '../types';
+import { translate, buildMorseSchedule, dotDurationSeconds } from '../morse';
+import { useMorsePlayback } from '../hooks/use-morse-playback';
+import type { Direction, ToolState } from '../types';
+import { MORSE_ALPHABET } from '../morse';
 
 interface CanvasProps {
   state: ToolState;
   onChange: (state: ToolState) => void;
 }
 
-const BASE_LABELS: { base: number; label: string }[] = [
-  { base: 2, label: 'BIN (2)' },
-  { base: 8, label: 'OCT (8)' },
-  { base: 10, label: 'DEC (10)' },
-  { base: 16, label: 'HEX (16)' },
-];
-
-function CopyButton({ value }: { value: string }) {
-  const [copied, setCopied] = React.useState(false);
-  const handleCopy = React.useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // clipboard unavailable; ignore
-    }
-  }, [value]);
-  return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className="copy-btn text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-      aria-label="Copy converted value"
-    >
-      {copied ? 'Copied!' : 'Copy'}
-    </button>
-  );
-}
-
 export const Canvas: React.FC<CanvasProps> = ({ state, onChange }) => {
-  const conversions = React.useMemo(() => convertToAllBases(state), [state]);
-  const rows = [
-    ...BASE_LABELS.map(({ base, label }) => ({ base, label, conversion: conversions[base - 2] })),
-    ...Array.from({ length: 30 }, (_, i) => {
-      const base = i + 7;
-      if (base === 8 || base === 10 || base === 16) return null;
-      return { base, label: `Base ${base}`, conversion: conversions[base - 2] };
-    }).filter((r): r is { base: number; label: string; conversion: (typeof conversions)[number] } => r !== null),
-  ];
-
-  const inputValue = parseIntegerInBase(state.input, state.inputBase);
-  const twos = state.showTwosComplement ? twosComplementInfo(state) : null;
-
   const update = (patch: Partial<ToolState>) => onChange({ ...state, ...patch });
+  const result = React.useMemo(() => translate(state.input, state.direction), [state.input, state.direction]);
+  const { playing, signalOn, play, stop } = useMorsePlayback(
+    state.direction === 'text-to-morse' ? result.output : state.input,
+    state.wpm
+  );
+
+  const direction: Direction = state.direction;
+  const isTextToMorse = direction === 'text-to-morse';
+  const outputValue = isTextToMorse ? result.output : result.output;
+
+  const swapDirection = () => {
+    const nextDirection: Direction = isTextToMorse ? 'morse-to-text' : 'text-to-morse';
+    // Carry the output over as the new input so the swap feels continuous.
+    update({ direction: nextDirection, input: outputValue });
+  };
+
+  const schedule = React.useMemo(
+    () => buildMorseSchedule(isTextToMorse ? result.output : state.input, state.wpm),
+    [isTextToMorse, result.output, state.input, state.wpm]
+  );
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(outputValue);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+
+  const share = async () => {
+    const text = outputValue;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Morse Code Translator', text });
+        return;
+      }
+    } catch {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      /* ignore */
+    }
+  };
 
   return (
-    <div className="p-4 space-y-4 overflow-y-auto h-full" data-testid="base-converter-canvas">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-        <label
-          htmlFor="base-input"
-          className="text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300"
+    <div className="p-4 space-y-4 overflow-y-auto h-full" data-testid="morse-canvas">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={swapDirection}
+          aria-label="Swap translation direction"
+          className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
         >
-          Input (base {state.inputBase})
+          ⇄ {isTextToMorse ? 'Text → Morse' : 'Morse → Text'}
+        </button>
+        <span className="text-xs text-gray-500 dark:text-gray-400">Real-time translation</span>
+      </div>
+
+      <div>
+        <label htmlFor="morse-input" className="text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">
+          {isTextToMorse ? 'Plain text' : 'Morse code'}
         </label>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <input
-            id="base-input"
-            type="text"
-            value={state.input}
-            onChange={(e) => update({ input: e.target.value })}
-            placeholder={`Enter a base-${state.inputBase} number`}
-            className="w-full sm:w-72 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100"
-            aria-describedby="base-input-error"
-          />
-          <select
-            aria-label="Input base"
-            value={state.inputBase}
-            onChange={(e) => update({ inputBase: Number(e.target.value) })}
-            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100"
+        <textarea
+          id="morse-input"
+          value={state.input}
+          onChange={(e) => update({ input: e.target.value })}
+          placeholder={isTextToMorse ? 'Type text to translate…' : 'Type Morse code (e.g. .... .. / -.-.)'}
+          rows={4}
+          className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm font-mono text-gray-900 dark:text-gray-100"
+        />
+      </div>
+
+      <div>
+        <span className="text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">
+          {isTextToMorse ? 'Morse code' : 'Plain text'}
+        </span>
+        <div className="mt-1 flex items-start gap-2">
+          <output
+            data-testid="morse-output"
+            className="flex-1 min-h-[64px] break-all rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-3 py-2 font-mono text-sm text-gray-900 dark:text-gray-100"
           >
-            {Array.from({ length: 35 }, (_, i) => i + 2).map((b) => (
-              <option key={b} value={b}>
-                Base {b}
-              </option>
-            ))}
-          </select>
+            {outputValue || '—'}
+          </output>
+          <div className="flex flex-col gap-1">
+            <button type="button" onClick={copy} className="copy-btn text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Copy output">
+              Copy
+            </button>
+            <button type="button" onClick={share} className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Share output">
+              Share
+            </button>
+          </div>
         </div>
+        {isTextToMorse && result.unsupported.length > 0 && (
+          <p role="alert" className="mt-1 text-xs text-amber-600 dark:text-amber-400" data-testid="unsupported-chars">
+            Unsupported characters skipped: {result.unsupported.join(' ')}
+          </p>
+        )}
       </div>
 
-      <div className="grid gap-2">
-        {rows.map((row) => {
-          const { base, label, conversion } = row;
-          if (!conversion) return null;
-          return (
-          <div
-            key={base}
-            className="flex items-center justify-between gap-3 rounded-md border border-gray-200 dark:border-gray-800 px-3 py-2"
-            data-testid={`base-row-${base}`}
-          >
-            <span className="w-20 shrink-0 text-xs font-medium text-gray-500 dark:text-gray-400">{label}</span>
-            {conversion.error ? (
-              <span role="alert" className="flex-1 text-xs text-red-600 dark:text-red-400">
-                {conversion.error}
-              </span>
-            ) : (
-              <code className="flex-1 break-all font-mono text-sm text-gray-900 dark:text-gray-100">
-                {conversion.formatted || '—'}
-              </code>
-            )}
-            {!conversion.error && conversion.formatted ? <CopyButton value={conversion.formatted} /> : null}
-          </div>
-          );
-        })}
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={playing ? stop : play}
+          aria-pressed={playing}
+          className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900"
+          data-testid="play-button"
+        >
+          {playing ? '■ Stop' : '▶ Play Morse'}
+        </button>
+        <label className="flex items-center gap-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+          WPM
+          <input
+            type="range"
+            min={5}
+            max={40}
+            value={state.wpm}
+            onChange={(e) => update({ wpm: Number(e.target.value) })}
+            aria-label="Playback speed in words per minute"
+            data-testid="wpm-slider"
+          />
+          <span data-testid="wpm-value">{state.wpm} WPM</span>
+        </label>
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          Dot: {dotDurationSeconds(state.wpm).toFixed(3)}s · Duration: {schedule.totalSeconds.toFixed(2)}s
+        </span>
+        <div
+          aria-label="Signal light"
+          data-testid="signal-light"
+          className={`ml-auto h-8 w-8 rounded-full border-2 transition-colors ${
+            signalOn ? 'bg-amber-400 border-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.8)]' : 'bg-gray-200 border-gray-300 dark:bg-gray-700 dark:border-gray-600'
+          }`}
+        />
       </div>
 
-      {state.showTwosComplement && (
-        <div className="rounded-md border border-gray-200 dark:border-gray-800 px-3 py-2">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-              Two's complement ({state.bitLength} bit)
-            </span>
-            {twos ? <CopyButton value={twos.replace(/ /g, '')} /> : null}
+      {state.showChart && (
+        <div data-testid="morse-chart">
+          <h3 className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">Morse reference chart</h3>
+          <div className="grid grid-cols-2 gap-1 sm:grid-cols-4 lg:grid-cols-6">
+            {Object.entries(MORSE_ALPHABET).map(([char, code]) => (
+              <div
+                key={char}
+                className="flex items-center justify-between rounded border border-gray-200 dark:border-gray-800 px-2 py-1 font-mono text-xs text-gray-900 dark:text-gray-100"
+              >
+                <span className="font-bold">{char}</span>
+                <span className="text-gray-600 dark:text-gray-400">{code}</span>
+              </div>
+            ))}
           </div>
-          {twos ? (
-            <code className="mt-1 block break-all font-mono text-sm text-gray-900 dark:text-gray-100">{twos}</code>
-          ) : (
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Enter a valid integer (no fractional part) to see the two's complement representation.
-            </p>
-          )}
-          {inputValue !== null && (
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Minimum unsigned bit length for magnitude: {requiredBitLength(inputValue)}
-            </p>
-          )}
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            Letters are separated by a space; words by &quot; / &quot;. When decoding, &quot;|&quot; is also accepted as a word separator.
+          </p>
         </div>
       )}
     </div>

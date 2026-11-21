@@ -1,61 +1,39 @@
 'use client';
 
-import { MAX_BASE, MIN_BASE } from '../types';
+import { Sidebar } from './Sidebar';
+import type { ToolState } from '../types';
 
 interface ToolSidebarProps {
-  text?: string;
+  state: ToolState;
   fontSize?: number;
   onFontSizeChange?: (delta: number) => void;
 }
 
-export function ToolSidebar({ text, fontSize, onFontSizeChange }: ToolSidebarProps) {
-  const digits = (text ?? '').replace(/\s/g, '').length;
-
+export function ToolSidebar({ state, fontSize, onFontSizeChange }: ToolSidebarProps) {
   return (
     <div className="converter-sidebar">
-      <div className="sidebar-section">
-        <h3>Input Stats</h3>
-        <dl className="stats-list">
-          <div className="stat-row">
-            <dt>Digits</dt>
-            <dd>{digits.toLocaleString()}</dd>
-          </div>
-          <div className="stat-row">
-            <dt>Font size</dt>
-            <dd>
-              <button
-                type="button"
-                aria-label="Decrease font size"
-                onClick={() => onFontSizeChange?.(-2)}
-                className="mr-2 rounded border border-gray-300 px-2 text-xs dark:border-gray-700"
-              >
-                A-
-              </button>
-              <span className="font-mono text-xs">{fontSize ?? 16}px</span>
-              <button
-                type="button"
-                aria-label="Increase font size"
-                onClick={() => onFontSizeChange?.(2)}
-                className="ml-2 rounded border border-gray-300 px-2 text-xs dark:border-gray-700"
-              >
-                A+
-              </button>
-            </dd>
-          </div>
-          <div className="stat-row">
-            <dt>Supported bases</dt>
-            <dd>
-              {MIN_BASE}–{MAX_BASE}
-            </dd>
-          </div>
-        </dl>
-      </div>
-      <div className="sidebar-section">
-        <h3>Digit reference</h3>
-        <p className="text-xs leading-relaxed">
-          Digits above 9 map to letters: a=10, b=11, … z=35. Inputs may include an optional
-          leading sign and a single fractional part.
-        </p>
+      <Sidebar state={state} onChange={() => undefined} />
+      <div className="sidebar-section px-4">
+        <h3 className="mb-2 font-medium text-gray-900 dark:text-gray-100">Font size</h3>
+        <div className="flex items-center gap-2 text-xs">
+          <button
+            type="button"
+            aria-label="Decrease font size"
+            onClick={() => onFontSizeChange?.(-2)}
+            className="rounded border border-gray-300 px-2 dark:border-gray-700"
+          >
+            A-
+          </button>
+          <span className="font-mono">{fontSize ?? 16}px</span>
+          <button
+            type="button"
+            aria-label="Increase font size"
+            onClick={() => onFontSizeChange?.(2)}
+            className="rounded border border-gray-300 px-2 dark:border-gray-700"
+          >
+            A+
+          </button>
+        </div>
       </div>
     </div>
   );
