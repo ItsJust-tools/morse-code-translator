@@ -1,9 +1,7 @@
 export { default as toolConfig } from './tool.config';
 export { templateBaseVersion } from './template-metadata';
 export { templateMetadata, getPublicSiteUrl } from './template-metadata';
-export {
-  morseTranslatorTool,
-} from './tool-definition';
+export { morseTranslatorTool } from './tool-definition';
 export {
   MORSE_ALPHABET,
   REVERSE_MORSE_ALPHABET,
@@ -25,9 +23,4 @@ export { Canvas } from './components/Canvas';
 export { Sidebar } from './components/Sidebar';
 export { Toolbar } from './components/Toolbar';
 export { useMorsePlayback } from './hooks/use-morse-playback';
-export type {
-  ToolState,
-  Direction,
-  ScheduleElement,
-  MorseSchedule,
-} from './types';
+export type { ToolState, Direction, ScheduleElement, MorseSchedule } from './types';

@@ -79,10 +79,7 @@ export function useMorsePlayback(morse: string, wpm: number): UseAudioPlaybackRe
         const delayMs = Math.round(acc * 1000);
         timeoutsRef.current.push(window.setTimeout(() => setSignalOn(true), delayMs));
         timeoutsRef.current.push(
-          window.setTimeout(
-            () => setSignalOn(false),
-            delayMs + Math.round(el.seconds * 1000)
-          )
+          window.setTimeout(() => setSignalOn(false), delayMs + Math.round(el.seconds * 1000))
         );
       }
       acc += el.seconds;

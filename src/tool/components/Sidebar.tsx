@@ -17,7 +17,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ state, onChange }) => {
       <div>
         <h3 className="mb-2 font-medium text-gray-900 dark:text-gray-100">Reference chart</h3>
         <label className="flex items-center justify-between gap-2">
-          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Show Morse chart</span>
+          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+            Show Morse chart
+          </span>
           <input
             type="checkbox"
             checked={state.showChart}
@@ -39,7 +41,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ state, onChange }) => {
             value={state.wpm}
             onChange={(e) => {
               const n = Math.round(Number(e.target.value));
-              update({ wpm: Number.isFinite(n) ? Math.min(MAX_WPM, Math.max(MIN_WPM, n)) : DEFAULT_WPM });
+              update({
+                wpm: Number.isFinite(n) ? Math.min(MAX_WPM, Math.max(MIN_WPM, n)) : DEFAULT_WPM,
+              });
             }}
             className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
           />

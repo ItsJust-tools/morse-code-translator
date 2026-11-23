@@ -13,7 +13,10 @@ interface CanvasProps {
 
 export const Canvas: React.FC<CanvasProps> = ({ state, onChange }) => {
   const update = (patch: Partial<ToolState>) => onChange({ ...state, ...patch });
-  const result = React.useMemo(() => translate(state.input, state.direction), [state.input, state.direction]);
+  const result = React.useMemo(
+    () => translate(state.input, state.direction),
+    [state.input, state.direction]
+  );
   const { playing, signalOn, play, stop } = useMorsePlayback(
     state.direction === 'text-to-morse' ? result.output : state.input,
     state.wpm
@@ -74,14 +77,19 @@ export const Canvas: React.FC<CanvasProps> = ({ state, onChange }) => {
       </div>
 
       <div>
-        <label htmlFor="morse-input" className="text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="morse-input"
+          className="text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300"
+        >
           {isTextToMorse ? 'Plain text' : 'Morse code'}
         </label>
         <textarea
           id="morse-input"
           value={state.input}
           onChange={(e) => update({ input: e.target.value })}
-          placeholder={isTextToMorse ? 'Type text to translate…' : 'Type Morse code (e.g. .... .. / -.-.)'}
+          placeholder={
+            isTextToMorse ? 'Type text to translate…' : 'Type Morse code (e.g. .... .. / -.-.)'
+          }
           rows={4}
           className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm font-mono text-gray-900 dark:text-gray-100"
         />
@@ -99,16 +107,30 @@ export const Canvas: React.FC<CanvasProps> = ({ state, onChange }) => {
             {outputValue || '—'}
           </output>
           <div className="flex flex-col gap-1">
-            <button type="button" onClick={copy} className="copy-btn text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Copy output">
+            <button
+              type="button"
+              onClick={copy}
+              className="copy-btn text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label="Copy output"
+            >
               Copy
             </button>
-            <button type="button" onClick={share} className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Share output">
+            <button
+              type="button"
+              onClick={share}
+              className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label="Share output"
+            >
               Share
             </button>
           </div>
         </div>
         {isTextToMorse && result.unsupported.length > 0 && (
-          <p role="alert" className="mt-1 text-xs text-amber-600 dark:text-amber-400" data-testid="unsupported-chars">
+          <p
+            role="alert"
+            className="mt-1 text-xs text-amber-600 dark:text-amber-400"
+            data-testid="unsupported-chars"
+          >
             Unsupported characters skipped: {result.unsupported.join(' ')}
           </p>
         )}
@@ -138,20 +160,25 @@ export const Canvas: React.FC<CanvasProps> = ({ state, onChange }) => {
           <span data-testid="wpm-value">{state.wpm} WPM</span>
         </label>
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          Dot: {dotDurationSeconds(state.wpm).toFixed(3)}s · Duration: {schedule.totalSeconds.toFixed(2)}s
+          Dot: {dotDurationSeconds(state.wpm).toFixed(3)}s · Duration:{' '}
+          {schedule.totalSeconds.toFixed(2)}s
         </span>
         <div
           aria-label="Signal light"
           data-testid="signal-light"
           className={`ml-auto h-8 w-8 rounded-full border-2 transition-colors ${
-            signalOn ? 'bg-amber-400 border-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.8)]' : 'bg-gray-200 border-gray-300 dark:bg-gray-700 dark:border-gray-600'
+            signalOn
+              ? 'bg-amber-400 border-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.8)]'
+              : 'bg-gray-200 border-gray-300 dark:bg-gray-700 dark:border-gray-600'
           }`}
         />
       </div>
 
       {state.showChart && (
         <div data-testid="morse-chart">
-          <h3 className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">Morse reference chart</h3>
+          <h3 className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            Morse reference chart
+          </h3>
           <div className="grid grid-cols-2 gap-1 sm:grid-cols-4 lg:grid-cols-6">
             {Object.entries(MORSE_ALPHABET).map(([char, code]) => (
               <div
@@ -164,7 +191,8 @@ export const Canvas: React.FC<CanvasProps> = ({ state, onChange }) => {
             ))}
           </div>
           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            Letters are separated by a space; words by &quot; / &quot;. When decoding, &quot;|&quot; is also accepted as a word separator.
+            Letters are separated by a space; words by &quot; / &quot;. When decoding, &quot;|&quot;
+            is also accepted as a word separator.
           </p>
         </div>
       )}

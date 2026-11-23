@@ -1,4 +1,10 @@
-import { MIN_WPM, MAX_WPM, type MorseSchedule, type ScheduleElement, type ToolState } from './types';
+import {
+  MIN_WPM,
+  MAX_WPM,
+  type MorseSchedule,
+  type ScheduleElement,
+  type ToolState,
+} from './types';
 
 /** International Morse code: letters, digits, and common punctuation. */
 export const MORSE_ALPHABET: Record<string, string> = {
@@ -52,9 +58,9 @@ export const MORSE_ALPHABET: Record<string, string> = {
   '=': '-...-',
   '+': '.-.-.',
   '-': '-....-',
-  '_': '..--.-',
+  _: '..--.-',
   '"': '.-..-.',
-  '$': '...-..-',
+  $: '...-..-',
   '@': '.--.-.',
 };
 
@@ -133,9 +139,7 @@ export function morseToText(input: string): TranslationResult {
   for (const word of words) {
     const letters = word.split(/\s+/).filter((l) => l.length > 0);
     if (letters.length === 0) continue;
-    const decoded = letters
-      .map((letter) => REVERSE_MORSE_ALPHABET[letter] ?? '')
-      .join('');
+    const decoded = letters.map((letter) => REVERSE_MORSE_ALPHABET[letter] ?? '').join('');
     decodedWords.push(decoded);
   }
 
@@ -143,7 +147,10 @@ export function morseToText(input: string): TranslationResult {
 }
 
 /** Translate state input according to the active direction. */
-export function translate(input: string, direction: 'text-to-morse' | 'morse-to-text'): TranslationResult {
+export function translate(
+  input: string,
+  direction: 'text-to-morse' | 'morse-to-text'
+): TranslationResult {
   return direction === 'text-to-morse' ? textToMorse(input) : morseToText(input);
 }
 
@@ -179,7 +186,10 @@ export function buildMorseSchedule(morse: string, wpm: number): MorseSchedule {
   const unit = dotDurationSeconds(wpm);
   const elements: ScheduleElement[] = [];
 
-  const words = morse.split('/').map((w) => w.trim()).filter((w) => w.length > 0);
+  const words = morse
+    .split('/')
+    .map((w) => w.trim())
+    .filter((w) => w.length > 0);
 
   words.forEach((word, wordIndex) => {
     const letters = word.split(/\s+/).filter((l) => l.length > 0);

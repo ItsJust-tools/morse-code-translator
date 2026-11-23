@@ -1,12 +1,6 @@
 import type { Tool, DeserializeResult } from '@itsjust/core';
 import toolConfig from './tool.config';
-import {
-  DEFAULT_STATE,
-  MIN_WPM,
-  MAX_WPM,
-  type Direction,
-  type ToolState,
-} from './types';
+import { DEFAULT_STATE, MIN_WPM, MAX_WPM, type Direction, type ToolState } from './types';
 
 function clampInteger(value: number, min: number, max: number, fallback: number): number {
   if (!Number.isInteger(value)) return fallback;
@@ -26,7 +20,10 @@ export const morseTranslatorTool: Tool<ToolState> = {
   serialize: (state) => JSON.stringify(state),
   deserialize: (data): DeserializeResult<ToolState> => {
     if (typeof data !== 'object' || data === null) {
-      return { success: false, error: 'Invalid data format: expected Morse translator state object' };
+      return {
+        success: false,
+        error: 'Invalid data format: expected Morse translator state object',
+      };
     }
     const v = data as Partial<ToolState>;
 

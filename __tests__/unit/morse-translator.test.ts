@@ -185,8 +185,15 @@ describe('buildMorseSchedule', () => {
 
 describe('tool state serialize/deserialize', () => {
   it('round-trips state through serialize/deserialize', () => {
-    const state: ToolState = { input: 'SOS', direction: 'text-to-morse', wpm: 20, showChart: false };
-    const deserialized = morseTranslatorTool.deserialize(JSON.parse(morseTranslatorTool.serialize(state)));
+    const state: ToolState = {
+      input: 'SOS',
+      direction: 'text-to-morse',
+      wpm: 20,
+      showChart: false,
+    };
+    const deserialized = morseTranslatorTool.deserialize(
+      JSON.parse(morseTranslatorTool.serialize(state))
+    );
     expect(deserialized).toEqual({ success: true, data: state });
   });
 
@@ -208,7 +215,10 @@ describe('tool state serialize/deserialize', () => {
   it('applies defaults and clamps for partial payloads', () => {
     const wpmMax = morseTranslatorTool.deserialize({ input: 'hi', wpm: 999 });
     expect(wpmMax.success && wpmMax.data).toEqual({
-      input: 'hi', direction: DEFAULT_STATE.direction, wpm: MAX_WPM, showChart: DEFAULT_STATE.showChart,
+      input: 'hi',
+      direction: DEFAULT_STATE.direction,
+      wpm: MAX_WPM,
+      showChart: DEFAULT_STATE.showChart,
     });
     const wpmMin = morseTranslatorTool.deserialize({ input: 'hi', wpm: 1 });
     expect(wpmMin.success && wpmMin.data?.wpm).toBe(MIN_WPM);
